@@ -62,12 +62,14 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 .actions{display:flex;gap:10px;flex-wrap:wrap}
 .actions>*{flex:1 1 180px}
 .done{background:transparent;color:var(--ok);border-color:var(--ok);font-weight:700}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .stat{background:var(--surface);padding:12px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
 .stat b{font-family:var(--f-mono);font-size:1.15rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .stat small{color:var(--muted);font-size:.75rem}
 .stat.big b{color:var(--ok)}
-@media (max-width:460px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat.wide{grid-column:1/-1}
+.sub-long{font-family:var(--f-display);font-size:1.1rem;margin-top:8px}
+.coin.yr b{font-size:1.3rem}
 .coins{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:10px}
 .coin{aspect-ratio:1;max-width:100%;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed var(--line);color:var(--muted);font-size:.7rem;text-align:center;line-height:1.1}
 .coin b{font-family:var(--f-display);font-size:1.15rem;color:inherit}
@@ -156,7 +158,18 @@ footer{color:var(--muted);font-size:.8rem;text-align:center}
 
 <script>
 const KEY="clean-streak-v1", DAY=864e5;
-const MILESTONES=[1,3,7,14,30,60,90,180,365,730];
+const BASE_MS=[1,3,7,14,30,60,90,180];
+function addYears(t,n){const d=new Date(t);d.setFullYear(d.getFullYear()+n);return d.getTime()}
+function calSpan(start,now){const a=new Date(start),b=new Date(now);let y=b.getFullYear()-a.getFullYear(),m=b.getMonth()-a.getMonth(),d=b.getDate()-a.getDate();
+  if(b.getHours()*60+b.getMinutes()<a.getHours()*60+a.getMinutes())d--;
+  if(d<0){m--;d+=new Date(b.getFullYear(),b.getMonth(),0).getDate()}
+  if(m<0){y--;m+=12}return{y,m,d}}
+function fmtLong(start,end){const {y,m,d}=calSpan(start,end),p=[];if(y)p.push(y+" "+(y===1?"Jahr":"Jahre"));if(m)p.push(m+" "+(m===1?"Monat":"Monate"));if(d||!p.length)p.push(d+" "+(d===1?"Tag":"Tage"));return p.join(", ")}
+function msList(start,now){
+  const L=BASE_MS.map(d=>({at:start+d*DAY,b:d,s:d===1?"Tag":"Tage",name:d+" "+(d===1?"Tag":"Tage")}));
+  const yrs=Math.max(2,calSpan(start,now).y+1);
+  for(let y=1;y<=yrs;y++)L.push({at:addYears(start,y),b:y,s:y===1?"Jahr":"Jahre",name:y+" "+(y===1?"Jahr":"Jahre"),yr:true});
+  return L}
 const CATALOG={
   "Alkohol":["Alkohol","Bier","Wein","Schnaps","Komasaufen"],
   "Nikotin & Tabak":["Zigaretten","Dampfen","Snus","Nikotinbeutel","Tabak"],
@@ -296,19 +309,21 @@ function render(){
   if(ui.wiz){main.innerHTML=renderWizard();return}
   const h=cur(), now=Date.now(), ms=now-h.start, future=ms<0;
   const days=Math.max(0,Math.floor(ms/DAY)), best=Math.max(h.best||0,ms);
-  const next=MILESTONES.find(m=>m>days), prev=[...MILESTONES].reverse().find(m=>m<=days)||0;
-  const pct=future?0:next?Math.min(100,(ms/DAY-prev)/(next-prev)*100):100;
+  const L=msList(h.start,now), nextM=L.find(x=>x.at>now), prevAt=([...L].reverse().find(x=>x.at<=now)||{}).at??h.start;
+  const pct=future?0:nextM?Math.min(100,(now-prevAt)/(nextM.at-prevAt)*100):100;
+  const yrs=future?0:calSpan(h.start,now).y;
   const checked=h.checkins.includes(today()), c=ui.confirm;
   const avoided=Math.max(0,ms/DAY*rate(h));
   const cards=[];
-  if(rate(h)>0)cards.push(`<div class="stat big"><span class="lbl">Vermieden</span><b>${fmtNum(Math.floor(avoided))} ×</b><small>≈ ${fmtNum(rate(h)*7,1)} pro Woche</small></div>`);
+  if(rate(h)>0)cards.push(`<div class="stat big"><span class="lbl">Vermieden</span><b>${avoided<10?fmtNum(Math.floor(avoided*10)/10,1):fmtNum(Math.floor(avoided))} ×</b><small>≈ ${fmtNum(rate(h)*7,1)} pro Woche</small></div>`);
   if(rate(h)>0&&h.minutes>0)cards.push(`<div class="stat big"><span class="lbl">Zeit zurück</span><b>${fmtMin(avoided*h.minutes)}</b><small>${fmtNum(h.minutes)} min pro Mal</small></div>`);
   if(rate(h)>0&&h.cost>0)cards.push(`<div class="stat big"><span class="lbl">Gespart</span><b>${fmtNum(avoided*h.cost,2)} €</b><small>${fmtNum(h.cost,2)} € pro Mal</small></div>`);
-  cards.push(`<div class="stat"><span class="lbl">Rekord</span><b>${Math.floor(best/DAY)} T</b><small>längste Serie</small></div>`);
+  cards.push(`<div class="stat"><span class="lbl">Rekord</span><b>${best>=365*DAY?fmtNum(Math.floor(best/(365.25*DAY)*10)/10,1)+" J":Math.floor(best/DAY)+" T"}</b><small>längste Serie</small></div>`);
   cards.push(`<div class="stat"><span class="lbl">Check-ins</span><b>${h.checkins.length}</b><small>bestätigte Tage</small></div>`);
   cards.push(`<div class="stat"><span class="lbl">Neustarts</span><b>${h.resets.length}</b><small>gesamt</small></div>`);
   const yearProj=rate(h)>0?`<p class="hint">Hochgerechnet auf ein Jahr: ${fmtNum(rate(h)*365)} Mal${h.minutes?`, ${fmtMin(rate(h)*365*h.minutes)}`:""}${h.cost?`, ${fmtNum(rate(h)*365*h.cost,0)} €`:""}.</p>`:"";
 
+  if(cards.length%2)cards[cards.length-1]=cards[cards.length-1].replace('class="stat','class="stat wide');
   main.innerHTML=`<div class="col">
   <section class="hero">
     <div class="hero-top">
@@ -316,8 +331,8 @@ function render(){
       <button class="btn-ghost" data-act="edit">Bearbeiten</button>
     </div>
     ${future?`<div><div class="lbl">Start in</div><div class="days" style="font-size:clamp(2.6rem,12vw,4rem)" id="days">${fmtDur(-ms)}</div><div class="clock" id="clock"></div></div>`:`
-    <div><div class="counter"><span class="days" id="days">${days}</span><span class="days-unit">${days===1?"Tag":"Tage"}</span></div><div class="clock" id="clock"></div></div>
-    <div class="progress"><div class="lbl">${next?`Nächster Meilenstein: ${next} ${next===1?"Tag":"Tage"} · noch ${fmtDur(next*DAY-ms)}`:"Alle Meilensteine erreicht"}</div><div class="bar"><i style="width:${pct.toFixed(1)}%"></i></div></div>
+    <div><div class="counter"><span class="days" id="days" data-day="${days}">${yrs>=1?yrs:days}</span><span class="days-unit">${yrs>=1?(yrs===1?"Jahr":"Jahre"):(days===1?"Tag":"Tage")}</span></div>${yrs>=1?`<div class="sub-long">${fmtLong(h.start,now)} · ${fmtNum(days)} Tage</div>`:""}<div class="clock" id="clock"></div></div>
+    <div class="progress"><div class="lbl">${nextM?`Nächster Meilenstein: ${nextM.name} · noch ${fmtDur(nextM.at-now)}`:"Alle Meilensteine erreicht"}</div><div class="bar"><i style="width:${pct.toFixed(1)}%"></i></div></div>
     <div class="actions">
       ${checked?`<button class="done" disabled>✓ Heute bestätigt</button>`:`<button class="btn-primary" data-act="checkin">Heute bleibe ich dabei</button>`}
       <button class="btn-danger" data-act="relapse">Rückfall eintragen</button>
@@ -345,7 +360,7 @@ function render(){
   </section>
   <section class="col" style="gap:8px"><div class="stats">${cards.join("")}</div>${yearProj}</section>
   <section class="card"><h2>Meilensteine</h2>
-    <div class="coins">${MILESTONES.map(m=>`<div class="coin ${days>=m&&!future?"got":""}" title="${m} Tage"><b>${m>=365?(m/365)+"J":m}</b>${m>=365?(m===365?"Jahr":"Jahre"):(m===1?"Tag":"Tage")}</div>`).join("")}</div></section>
+    <div class="coins">${L.map(x=>`<div class="coin ${x.at<=now&&!future?"got":""} ${x.yr?"yr":""}" title="${x.name}"><b>${x.b}</b>${x.s}</div>`).join("")}</div></section>
   <section class="card"><h2>Verlauf</h2>
     ${h.resets.length?`<ul class="hist">${[...h.resets].reverse().map(r=>`<li><span class="dur">${fmtDur(r.ms)}</span><span class="when">${fmtDate(r.at+r.ms)}</span><span class="note">${r.note?esc(r.note):"<span class='hint'>kein Auslöser notiert</span>"}</span></li>`).join("")}</ul>`:`<p class="empty">Noch kein Rückfall. Weiter so.</p>`}
   </section></div>`;
@@ -360,7 +375,7 @@ function tick(){
   const hh=Math.floor(ms%DAY/36e5),mm=Math.floor(ms%36e5/6e4),ss=Math.floor(ms%6e4/1e3);
   clock.textContent=`+ ${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}:${String(ss).padStart(2,"0")} · seit ${fmtDate(h.start)}`;
   const el=document.getElementById("days");
-  if(el&&+el.textContent!==Math.floor(ms/DAY))render();
+  if(el&&+el.dataset.day!==Math.floor(ms/DAY))render();
 }
 setInterval(tick,1000);
 
