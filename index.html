@@ -4,7 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#2D6A86">
+<meta name="theme-color" content="#16212B">
+<meta name="apple-mobile-web-app-title" content="Clean Streak">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Clean Streak</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
@@ -118,7 +124,7 @@ footer{color:var(--muted);font-size:.8rem;text-align:center}
 
 <div class="wrap">
   <header>
-    <h1>Clean Streak</h1>
+    <h1 style="display:flex;align-items:center;gap:10px"><img src="icon.svg" alt="" width="32" height="32" style="border-radius:8px">Clean Streak</h1>
     <button id="addBtn" class="btn-ghost">+ Gewohnheit</button>
   </header>
   <nav class="tabs" id="tabs" aria-label="Gewohnheiten"></nav>
@@ -412,6 +418,7 @@ document.getElementById("importBtn").onclick=()=>{
 // Altdaten aus Version 1 ergänzen
 state.habits.forEach(h=>{h.what??=h.name;h.daysPerWeek??=0;h.timesPerDay??=0;h.minutes??=0;h.cost??=0});
 render();
+if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 </script>
 </body>
 </html>

@@ -1,3 +1,5 @@
+<p align="center"><img src="icon.svg" width="96" alt="Clean Streak Logo"></p>
+
 # Clean Streak
 
 Ein schlanker, werbefreier Abstinenz-Tracker. Kein Abo, kein Konto, kein Server.
@@ -9,6 +11,9 @@ Ein schlanker, werbefreier Abstinenz-Tracker. Kein Abo, kein Konto, kein Server.
 - Rückfall eintragen mit optionalem Auslöser, Rekord bleibt erhalten
 - Mehrere Gewohnheiten parallel
 - Backup und Wiederherstellung per Text
+
+## Installation als App
+Seite im Browser öffnen, dann „Zum Home-Bildschirm“ (iPhone: Teilen-Menü in Safari, Android: Menü in Chrome). Die App startet danach im Vollbild und funktioniert auch offline.
 
 ## Datenschutz
 Alle Daten bleiben im `localStorage` deines Browsers. Nichts wird übertragen.
