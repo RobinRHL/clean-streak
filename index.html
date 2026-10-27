@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#2D6A86">
+<title>Clean Streak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: eine ruhige Spalte – Gewohnheit wählen, großer Zähler, Meilenstein-Münzen, Verlauf */
+:root{
+  --bg:#EEF2F4; --surface:#FFFFFF; --fg:#16212B; --muted:#5C6B78; --line:#D5DDE3;
+  --accent:#2D6A86; --accent-ink:#FFFFFF; --gold:#A87A1E; --gold-soft:#F4E7C8; --danger:#B0413E; --ok:#2F7D5B;
+  --f-display:"Bricolage Grotesque",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0F161C; --surface:#18222B; --fg:#E6EDF2; --muted:#93A3B0; --line:#2A3743;
+  --accent:#6FB3D2; --accent-ink:#0F161C; --gold:#E0B75A; --gold-soft:#3A3020; --danger:#E07A72; --ok:#6CC59A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F161C; --surface:#18222B; --fg:#E6EDF2; --muted:#93A3B0; --line:#2A3743;
+  --accent:#6FB3D2; --accent-ink:#0F161C; --gold:#E0B75A; --gold-soft:#3A3020; --danger:#E07A72; --ok:#6CC59A; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5}
+.wrap{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px;display:flex;flex-direction:column;gap:20px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--f-display);font-size:1.5rem;margin:0;letter-spacing:-.01em}
+h2{font-family:var(--f-display);font-size:1.1rem;margin:0 0 10px;text-wrap:balance}
+.lbl{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--surface);padding:9px 14px}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn-primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.btn-danger{color:var(--danger);border-color:var(--danger);background:transparent}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab{padding:6px 12px;border-radius:999px;font-size:.9rem}
+.tab[aria-selected="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.hero{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px 20px;display:flex;flex-direction:column;gap:18px}
+.hero-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.hero-name{font-family:var(--f-display);font-size:1.25rem;font-weight:700;margin:0}
+.why{color:var(--muted);margin:2px 0 0;font-style:italic}
+.counter{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.days{font-family:var(--f-display);font-weight:700;font-size:clamp(4rem,18vw,6.5rem);line-height:.9;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.days-unit{font-family:var(--f-display);font-size:1.4rem;color:var(--muted)}
+.clock{font-family:var(--f-mono);font-variant-numeric:tabular-nums;color:var(--muted)}
+.progress{display:flex;flex-direction:column;gap:6px}
+.bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--gold);border-radius:99px;transition:width .4s}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.actions>*{flex:1 1 180px}
+.done{background:transparent;color:var(--ok);border-color:var(--ok);font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.stat{background:var(--surface);padding:12px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat b{font-family:var(--f-mono);font-size:1.15rem;font-variant-numeric:tabular-nums}
+@media (max-width:460px){.stats{grid-template-columns:repeat(2,1fr)}}
+.coins{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:10px}
+.coin{aspect-ratio:1;max-width:100%;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed var(--line);color:var(--muted);font-size:.7rem;text-align:center;line-height:1.1}
+.coin b{font-family:var(--f-display);font-size:1.15rem;color:inherit}
+.coin.got{border:2px solid var(--gold);background:var(--gold-soft);color:var(--gold)}
+section.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.panel{display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--line);padding-top:14px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field input,.field textarea{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;width:100%}
+textarea{resize:vertical;min-height:70px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1 1 140px}
+.hist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.hist li{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;padding:10px 0;border-bottom:1px solid var(--line)}
+.hist li:last-child{border-bottom:0}
+.hist .dur{font-family:var(--f-mono);font-variant-numeric:tabular-nums;color:var(--danger);grid-row:span 2}
+.hist .when{color:var(--muted);font-size:.85rem}
+.hist .note{font-size:.9rem;min-width:0;overflow-wrap:anywhere}
+.empty{color:var(--muted);margin:0}
+.hint{font-size:.85rem;color:var(--muted);margin:0}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:.9rem}
+footer{color:var(--muted);font-size:.8rem;text-align:center}
+@media (prefers-reduced-motion:reduce){.bar>i{transition:none}}
+</style>
+<style>body{margin:0}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Clean Streak</h1>
+    <button id="addBtn" class="btn-ghost">+ Gewohnheit</button>
+  </header>
+
+  <nav class="tabs" id="tabs" aria-label="Gewohnheiten"></nav>
+
+  <section class="card" id="addPanel" hidden>
+    <h2>Neue Gewohnheit</h2>
+    <form id="addForm" class="panel" style="border:0;padding:0">
+      <div class="field"><label class="lbl" for="fName">Name (gern neutral, z. B. „Projekt X")</label><input id="fName" required maxlength="40"></div>
+      <div class="field"><label class="lbl" for="fWhy">Warum? Dein Grund, sichtbar bei jedem Öffnen</label><input id="fWhy" maxlength="120"></div>
+      <div class="field"><label class="lbl" for="fStart">Clean seit</label><input id="fStart" type="datetime-local" required></div>
+      <div class="row"><button type="submit" class="btn-primary">Anlegen</button><button type="button" id="addCancel">Abbrechen</button></div>
+    </form>
+  </section>
+
+  <main id="main"></main>
+
+  <section class="card">
+    <h2>Backup</h2>
+    <p class="hint">Daten liegen nur in diesem Browser. Kopiere das Backup regelmäßig irgendwohin, um Gerätewechsel oder gelöschte Browserdaten zu überstehen.</p>
+    <div class="panel">
+      <div class="field"><label class="lbl" for="backupText">Backup-Text</label><textarea id="backupText" spellcheck="false" placeholder="Hier erscheint dein Backup, oder füge eins zum Wiederherstellen ein"></textarea></div>
+      <div class="row"><button id="exportBtn">Backup erzeugen &amp; kopieren</button><button id="importBtn">Backup einspielen</button></div>
+    </div>
+  </section>
+
+  <footer>Open Source · keine Werbung, kein Abo, kein Server · eine einzige HTML-Datei</footer>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const KEY = "clean-streak-v1";
+const DAY = 864e5;
+const MILESTONES = [1,3,7,14,30,60,90,180,365,730];
+let state = load();
+let ui = { confirm: null };
+
+function sampleState(){
+  const id = uid();
+  const start = Date.now() - 9*DAY - 5*36e5;
+  return { active:id, habits:[{ id, name:"Beispiel – löschen oder umbenennen", why:"Mehr Energie und Fokus", start,
+    checkins:[], resets:[{ at:start, ms:4*DAY+3*36e5, note:"Spät abends, Handy im Bett" }], best:4*DAY+3*36e5 }] };
+}
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function load(){
+  try{ const s = JSON.parse(localStorage.getItem(KEY)); if(s && Array.isArray(s.habits)) return s; }catch(e){}
+  return sampleState();
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+function cur(){ return state.habits.find(h=>h.id===state.active) || state.habits[0]; }
+function today(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function esc(s){ return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function fmtDur(ms){
+  const d=Math.floor(ms/DAY), h=Math.floor(ms%DAY/36e5);
+  return d>0 ? `${d} T ${h} h` : `${h} h ${Math.floor(ms%36e5/6e4)} min`;
+}
+function fmtDate(t){ return new Date(t).toLocaleString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}); }
+function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>t.hidden=true,2200); }
+function localInput(t){ const d=new Date(t - new Date(t).getTimezoneOffset()*6e4); return d.toISOString().slice(0,16); }
+
+function renderTabs(){
+  const nav=document.getElementById("tabs");
+  nav.innerHTML = state.habits.map(h=>`<button class="tab" role="tab" aria-selected="${h.id===cur()?.id}" data-id="${h.id}">${esc(h.name)}</button>`).join("");
+  nav.hidden = state.habits.length<2;
+}
+
+function render(){
+  renderTabs();
+  const main=document.getElementById("main");
+  const h=cur();
+  if(!h){ main.innerHTML=`<section class="card"><p class="empty">Noch keine Gewohnheit angelegt. Tippe oben auf „+ Gewohnheit".</p></section>`; return; }
+  const ms=Date.now()-h.start, days=Math.floor(ms/DAY);
+  const best=Math.max(h.best||0, ms);
+  const next=MILESTONES.find(m=>m>days);
+  const prev=[...MILESTONES].reverse().find(m=>m<=days)||0;
+  const pct=next? Math.min(100,(ms/DAY-prev)/(next-prev)*100):100;
+  const checked=h.checkins.includes(today());
+  const c=ui.confirm;
+
+  main.innerHTML = `
+  <div style="display:flex;flex-direction:column;gap:20px">
+  <section class="hero">
+    <div class="hero-top">
+      <div><p class="hero-name">${esc(h.name)}</p>${h.why?`<p class="why">${esc(h.why)}</p>`:""}</div>
+      <button class="btn-ghost" data-act="edit" aria-label="Bearbeiten">Bearbeiten</button>
+    </div>
+    <div>
+      <div class="counter"><span class="days" id="days">${days}</span><span class="days-unit">${days===1?"Tag":"Tage"}</span></div>
+      <div class="clock" id="clock"></div>
+    </div>
+    <div class="progress">
+      <div class="lbl">${next?`Nächster Meilenstein: ${next} ${next===1?"Tag":"Tage"} · noch ${fmtDur(next*DAY-ms)}`:"Alle Meilensteine erreicht"}</div>
+      <div class="bar"><i style="width:${pct.toFixed(1)}%"></i></div>
+    </div>
+    <div class="actions">
+      ${checked?`<button class="done" disabled>✓ Heute bestätigt</button>`:`<button class="btn-primary" data-act="checkin">Heute bleibe ich dabei</button>`}
+      <button class="btn-danger" data-act="relapse">Rückfall eintragen</button>
+    </div>
+    ${c==="relapse"?`
+    <form class="panel" id="relapseForm">
+      <div class="field"><label class="lbl" for="rNote">Auslöser (optional) – hilft dir, Muster zu erkennen</label><input id="rNote" maxlength="140" placeholder="z. B. Langeweile, Stress, spät abends"></div>
+      <p class="hint">Deine Serie von ${fmtDur(ms)} wird gespeichert, der Zähler startet neu. Ein Rückfall löscht nicht, was du geschafft hast.</p>
+      <div class="row"><button type="submit" class="btn-danger">Neu starten</button><button type="button" data-act="cancel">Abbrechen</button></div>
+    </form>`:""}
+    ${c==="edit"?`
+    <form class="panel" id="editForm">
+      <div class="field"><label class="lbl" for="eName">Name</label><input id="eName" value="${esc(h.name)}" maxlength="40" required></div>
+      <div class="field"><label class="lbl" for="eWhy">Warum?</label><input id="eWhy" value="${esc(h.why)}" maxlength="120"></div>
+      <div class="field"><label class="lbl" for="eStart">Clean seit</label><input id="eStart" type="datetime-local" value="${localInput(h.start)}" required></div>
+      <div class="row"><button type="submit" class="btn-primary">Speichern</button><button type="button" data-act="cancel">Abbrechen</button></div>
+      <div class="row"><button type="button" class="btn-danger" data-act="askdelete">Gewohnheit löschen</button></div>
+    </form>`:""}
+    ${c==="delete"?`
+    <div class="panel">
+      <p class="hint">„${esc(h.name)}" mit gesamtem Verlauf endgültig löschen?</p>
+      <div class="row"><button class="btn-danger" data-act="delete">Endgültig löschen</button><button data-act="cancel">Abbrechen</button></div>
+    </div>`:""}
+  </section>
+
+  <div class="stats">
+    <div class="stat"><span class="lbl">Aktuell</span><b>${days} T</b></div>
+    <div class="stat"><span class="lbl">Rekord</span><b>${Math.floor(best/DAY)} T</b></div>
+    <div class="stat"><span class="lbl">Check-ins</span><b>${h.checkins.length}</b></div>
+    <div class="stat"><span class="lbl">Neustarts</span><b>${h.resets.length}</b></div>
+  </div>
+
+  <section class="card">
+    <h2>Meilensteine</h2>
+    <div class="coins">${MILESTONES.map(m=>`<div class="coin ${days>=m?"got":""}" title="${m} Tage"><b>${m>=365?(m/365)+"J":m}</b>${m>=365?(m===365?"Jahr":"Jahre"):(m===1?"Tag":"Tage")}</div>`).join("")}</div>
+  </section>
+
+  <section class="card">
+    <h2>Verlauf</h2>
+    ${h.resets.length?`<ul class="hist">${[...h.resets].reverse().map(r=>`<li><span class="dur">${fmtDur(r.ms)}</span><span class="when">${fmtDate(r.at+r.ms)}</span><span class="note">${r.note?esc(r.note):"<span class='hint'>kein Auslöser notiert</span>"}</span></li>`).join("")}</ul>`:`<p class="empty">Noch kein Rückfall. Weiter so.</p>`}
+  </section>
+  </div>`;
+  tick();
+  const f=document.getElementById("rNote"); if(f) f.focus();
+}
+
+function tick(){
+  const h=cur(); if(!h) return;
+  const ms=Date.now()-h.start;
+  const clock=document.getElementById("clock");
+  if(!clock) return;
+  const hh=Math.floor(ms%DAY/36e5), mm=Math.floor(ms%36e5/6e4), ss=Math.floor(ms%6e4/1e3);
+  clock.textContent=`+ ${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}:${String(ss).padStart(2,"0")} · seit ${fmtDate(h.start)}`;
+  const d=Math.floor(ms/DAY), el=document.getElementById("days");
+  if(el && +el.textContent!==d) render();
+}
+setInterval(tick,1000);
+
+document.addEventListener("click",e=>{
+  const tab=e.target.closest(".tab");
+  if(tab){ state.active=tab.dataset.id; ui.confirm=null; save(); render(); return; }
+  const a=e.target.closest("[data-act]")?.dataset.act; if(!a) return;
+  const h=cur();
+  if(a==="checkin"){ h.checkins.push(today()); save(); render(); toast("Bestätigt. Ein Tag nach dem anderen."); }
+  if(a==="relapse"){ ui.confirm = ui.confirm==="relapse"?null:"relapse"; render(); }
+  if(a==="edit"){ ui.confirm = ui.confirm==="edit"?null:"edit"; render(); }
+  if(a==="askdelete"){ ui.confirm="delete"; render(); }
+  if(a==="cancel"){ ui.confirm=null; render(); }
+  if(a==="delete"){ state.habits=state.habits.filter(x=>x.id!==h.id); state.active=state.habits[0]?.id; ui.confirm=null; save(); render(); toast("Gelöscht."); }
+});
+
+document.addEventListener("submit",e=>{
+  e.preventDefault();
+  const h=cur();
+  if(e.target.id==="relapseForm"){
+    const now=Date.now(), ms=now-h.start;
+    h.resets.push({ at:h.start, ms, note:document.getElementById("rNote").value.trim() });
+    h.best=Math.max(h.best||0, ms); h.start=now; ui.confirm=null; save(); render();
+    toast("Neu gestartet. Dein Rekord bleibt.");
+  }
+  if(e.target.id==="editForm"){
+    h.name=document.getElementById("eName").value.trim()||h.name;
+    h.why=document.getElementById("eWhy").value.trim();
+    const t=new Date(document.getElementById("eStart").value).getTime();
+    if(!isNaN(t) && t<=Date.now()) h.start=t;
+    ui.confirm=null; save(); render(); toast("Gespeichert.");
+  }
+  if(e.target.id==="addForm"){
+    const t=new Date(document.getElementById("fStart").value).getTime();
+    if(isNaN(t)||t>Date.now()){ toast("Startzeit darf nicht in der Zukunft liegen."); return; }
+    const id=uid();
+    state.habits.push({ id, name:document.getElementById("fName").value.trim(), why:document.getElementById("fWhy").value.trim(), start:t, checkins:[], resets:[], best:0 });
+    state.active=id; save(); e.target.reset(); document.getElementById("addPanel").hidden=true; render(); toast("Angelegt.");
+  }
+});
+
+document.getElementById("addBtn").onclick=()=>{
+  const p=document.getElementById("addPanel"); p.hidden=!p.hidden;
+  if(!p.hidden){ document.getElementById("fStart").value=localInput(Date.now()); document.getElementById("fName").focus(); }
+};
+document.getElementById("addCancel").onclick=()=>{ document.getElementById("addPanel").hidden=true; };
+
+document.getElementById("exportBtn").onclick=()=>{
+  const ta=document.getElementById("backupText");
+  ta.value=btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+  navigator.clipboard?.writeText(ta.value).then(()=>toast("Backup kopiert."),()=>{ ta.select(); toast("Text markiert – bitte selbst kopieren."); })
+    ?? (ta.select(), toast("Text markiert – bitte selbst kopieren."));
+};
+document.getElementById("importBtn").onclick=()=>{
+  const raw=document.getElementById("backupText").value.trim();
+  try{
+    const s=JSON.parse(decodeURIComponent(escape(atob(raw))));
+    if(!Array.isArray(s.habits)) throw 0;
+    state=s; save(); ui.confirm=null; render(); toast("Backup eingespielt.");
+  }catch(err){ toast("Backup ungültig. Bitte den kompletten Text einfügen."); }
+};
+
+render();
+</script>
+</body>
+</html>
