@@ -1,5 +1,5 @@
 // Clean Streak – Offline-Unterstützung. Bei Änderungen an der App die Versionsnummer erhöhen.
-const CACHE = "clean-streak-v2";
+const CACHE = "clean-streak-v5";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png", "./icon.svg"];
 
 self.addEventListener("install", e => {
