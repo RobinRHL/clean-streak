@@ -130,6 +130,18 @@ footer{color:var(--muted);font-size:.8rem;text-align:center}
   </header>
   <nav class="tabs" id="tabs" aria-label="Gewohnheiten"></nav>
   <main id="main"></main>
+  <section class="card" id="reminderCard">
+    <h2>Tägliche Erinnerung</h2>
+    <p class="hint">Dein Kalender erinnert dich jeden Tag zur gewählten Uhrzeit. Ein Tipp auf den Link im Termin öffnet Clean Streak.</p>
+    <div class="panel">
+      <div class="row">
+        <div class="field"><label class="lbl" for="remTime">Uhrzeit</label><input id="remTime" type="time" value="19:00"></div>
+        <div class="field"><label class="lbl" for="remTitle">Titel im Kalender</label><input id="remTitle" maxlength="40" value="Check-in"></div>
+      </div>
+      <div class="row"><button id="remGoogle" class="btn-primary">In Google Kalender eintragen</button><button id="remIcs">Kalenderdatei (.ics) laden</button></div>
+      <p class="hint">Google Kalender: im Termin bei Benachrichtigung „Zum Zeitpunkt des Termins“ wählen, dann kommt sie pünktlich. Die .ics-Datei ist für iPhone, Samsung-Kalender oder Outlook und enthält die Erinnerung schon.</p>
+    </div>
+  </section>
   <section class="card" id="backupCard">
     <h2>Backup</h2>
     <p class="hint">Daten liegen nur in diesem Browser. Kopiere das Backup regelmäßig irgendwohin, um Gerätewechsel oder gelöschte Browserdaten zu überstehen.</p>
@@ -138,7 +150,7 @@ footer{color:var(--muted);font-size:.8rem;text-align:center}
       <div class="row"><button id="exportBtn">Backup erzeugen &amp; kopieren</button><button id="importBtn">Backup einspielen</button></div>
     </div>
   </section>
-  <footer>Open Source · keine Werbung, kein Abo, kein Server · eine einzige HTML-Datei</footer>
+  <footer>Open Source · keine Werbung, kein Abo, kein Server · Daten bleiben auf deinem Gerät</footer>
 </div>
 <div class="toast" id="toast" hidden></div>
 
@@ -275,6 +287,7 @@ function renderTabs(){
   nav.hidden=state.habits.length<2||!!ui.wiz;
   document.getElementById("addBtn").hidden=!!ui.wiz||!state.habits.length;
   document.getElementById("backupCard").hidden=!!ui.wiz&&!state.habits.length;
+  document.getElementById("reminderCard").hidden=!!ui.wiz;
 }
 function render(){
   renderTabs();
@@ -357,6 +370,9 @@ document.addEventListener("input",e=>{
   if(e.target.id==="wCustom"){const v=e.target.value.trim();ui.wiz.what=v;ui.wiz.custom=!!v;
     document.querySelectorAll(".opt[aria-pressed]").forEach(b=>b.setAttribute("aria-pressed","false"));
     document.querySelector('[data-act="wnext"]').disabled=!v}
+  if(e.target.id==="wMin"||e.target.id==="wCost"){
+    const filled=[document.getElementById("wMin"),document.getElementById("wCost")].some(i=>i&&+i.value>0);
+    document.querySelector('[data-act="wnext"]').textContent=filled?"Weiter":"Überspringen"}
 });
 document.addEventListener("click",e=>{
   const tab=e.target.closest(".tab");
@@ -416,6 +432,44 @@ document.getElementById("importBtn").onclick=()=>{
     state=s;ui.wiz=null;ui.confirm=null;save();render();toast("Backup eingespielt.")}
   catch(err){toast("Backup ungültig. Bitte den kompletten Text einfügen.")}
 };
+/* ---------- Tägliche Erinnerung ---------- */
+(function(){
+  const t=document.getElementById("remTime"), ti=document.getElementById("remTitle");
+  try{const r=JSON.parse(localStorage.getItem(KEY+"-reminder")||"null");if(r){t.value=r.time||t.value;ti.value=r.title||ti.value}}catch(e){}
+  const remember=()=>{try{localStorage.setItem(KEY+"-reminder",JSON.stringify({time:t.value,title:ti.value}))}catch(e){}};
+  const appUrl=()=>location.origin+location.pathname;
+  const pad=n=>String(n).padStart(2,"0");
+  const stamp=d=>d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+"T"+pad(d.getHours())+pad(d.getMinutes())+"00";
+  function times(){
+    const [h,m]=(t.value||"19:00").split(":").map(Number), s=new Date();
+    s.setHours(h,m,0,0); if(s<Date.now()) s.setDate(s.getDate()+1);
+    return {s, e:new Date(s.getTime()+10*6e4)};
+  }
+  const title=()=>ti.value.trim()||"Check-in";
+  const text=()=>"Hast du es heute geschafft? "+appUrl();
+  document.getElementById("remGoogle").onclick=()=>{
+    remember(); const {s,e}=times();
+    const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||"Europe/Berlin";
+    const u="https://calendar.google.com/calendar/render?action=TEMPLATE"+
+      "&text="+encodeURIComponent(title())+"&details="+encodeURIComponent(text())+
+      "&dates="+stamp(s)+"/"+stamp(e)+"&ctz="+encodeURIComponent(tz)+"&recur="+encodeURIComponent("RRULE:FREQ=DAILY");
+    const a=document.createElement("a"); a.href=u; a.target="_blank"; a.rel="noopener"; document.body.appendChild(a); a.click(); a.remove();
+  };
+  document.getElementById("remIcs").onclick=()=>{
+    remember(); const {s}=times(), now=new Date();
+    const utc=now.toISOString().replace(/[-:]/g,"").slice(0,15)+"Z";
+    const esc=v=>v.replace(/[\\,;]/g,m=>"\\"+m);
+    const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Clean Streak//DE","CALSCALE:GREGORIAN","BEGIN:VEVENT",
+      "UID:"+uid()+"@clean-streak","DTSTAMP:"+utc,"DTSTART:"+stamp(s),"DURATION:PT10M","RRULE:FREQ=DAILY",
+      "SUMMARY:"+esc(title()),"DESCRIPTION:"+esc(text()),"URL:"+appUrl(),
+      "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+esc(title()),"TRIGGER:PT0M","END:VALARM",
+      "END:VEVENT","END:VCALENDAR"].join("\r\n");
+    const blob=new Blob([ics],{type:"text/calendar"}), a=document.createElement("a");
+    a.href=URL.createObjectURL(blob); a.download="clean-streak-erinnerung.ics"; document.body.appendChild(a); a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
+    toast("Kalenderdatei geladen. Öffne sie, um den Termin zu speichern.");
+  };
+})();
 // Altdaten aus Version 1 ergänzen
 state.habits.forEach(h=>{h.what??=h.name;h.daysPerWeek??=0;h.timesPerDay??=0;h.minutes??=0;h.cost??=0});
 render();

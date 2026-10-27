@@ -17,6 +17,8 @@ Ein schlanker, werbefreier Abstinenz-Tracker. Kein Abo, kein Konto, kein Server.
 ## Installation als App
 Seite im Browser öffnen, dann „Zum Home-Bildschirm“ (iPhone: Teilen-Menü in Safari, Android: Menü in Chrome). Die App startet danach im Vollbild und funktioniert auch offline.
 
+**Android:** am besten mit Chrome installieren. Firefox übernimmt das App-Icon nicht zuverlässig.
+
 ## Datenschutz
 Alle Daten bleiben im `localStorage` deines Browsers. Nichts wird übertragen.
 Mach regelmäßig ein Backup, denn gelöschte Browserdaten löschen auch den Verlauf.
