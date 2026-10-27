@@ -2,6 +2,8 @@
 
 # Clean Streak
 
+**➜ [App öffnen und installieren](https://robinrhl.github.io/clean-streak/)**
+
 Ein schlanker, werbefreier Abstinenz-Tracker. Kein Abo, kein Konto, kein Server.
 
 ## Funktionen
