@@ -20,7 +20,7 @@ Seite im Browser öffnen, dann „Zum Home-Bildschirm“ (iPhone: Teilen-Menü i
 **Android:** am besten mit Chrome installieren. Firefox übernimmt das App-Icon nicht zuverlässig.
 
 ## Datenschutz
-Alle Daten bleiben im `localStorage` deines Browsers. Nichts wird übertragen.
+Alle Daten bleiben im `localStorage` deines Browsers. Nichts wird übertragen, es gibt kein Tracking und keine Verbindung zu Drittanbietern (auch Schriften werden lokal ausgeliefert).
 Mach regelmäßig ein Backup, denn gelöschte Browserdaten löschen auch den Verlauf.
 
 ## Nutzung
@@ -28,4 +28,4 @@ Mach regelmäßig ein Backup, denn gelöschte Browserdaten löschen auch den Ver
 Alternativ `index.html` einfach lokal im Browser öffnen.
 
 ## Lizenz
-MIT
+MIT. Schriften: Bricolage Grotesque, Atkinson Hyperlegible und JetBrains Mono unter der SIL Open Font License 1.1.
